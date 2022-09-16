@@ -77,8 +77,20 @@ public class WeworkNotifier extends NotificatorAdapter {
         String buildNumber = build.getBuildNumber();
         // env.WEBHOOK_URL为TeamCity中需要配置的参数
         String url = build.getBuildType().getBuildParameter("env.WEBHOOK_URL");
+        String atMobileText = build.getBuildType().getBuildParameter("env.AT_MOBILE");
+        StringBuilder atMobile = new StringBuilder("[");
+        if (atMobileText != null && !"".equals(atMobileText.trim())) {
+            String[] split = atMobileText.split(",");
+            for (int i = 0; i < split.length; i++) {
+                if (i > 0) {
+                    atMobile.append(",");
+                }
+                atMobile.append("\"").append(split[i]).append("\"");
+            }
+        }
+        atMobile.append("]");
 
-        String body = "{\"text\":{\"content\": \"※TeamCity提醒※\n项目：" + projectName + "，版本号：" + buildNumber + "\n" + msg + "\"} ,\"msgtype\":\"text\"}";
+        String body = "{\"text\":{\"content\": \"※TeamCity提醒※\n项目：" + projectName + "，版本号：" + buildNumber + "\n" + msg + "\", \"mentioned_mobile_list\":" + atMobile + "} ,\"msgtype\":\"text\"}";
 
         sendPost(url, body);
     }

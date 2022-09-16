@@ -19,4 +19,6 @@ Profile --> Notification Rules -->  wework notifier
             - Environment variable (env.)
             
             - https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key={key}
-
+            
+            
+            - env.AT_MOBILE 可选
