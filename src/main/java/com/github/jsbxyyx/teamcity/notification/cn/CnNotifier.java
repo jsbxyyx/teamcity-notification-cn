@@ -10,7 +10,11 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
@@ -24,11 +28,11 @@ import java.util.Set;
  * @author jsbxyyx
  * @since
  */
-public class WeworkNotifier extends NotificatorAdapter {
+public class CnNotifier extends NotificatorAdapter {
 
-    private static final Logger log = LoggerFactory.getLogger(WeworkNotifier.class);
+    private static final Logger log = LoggerFactory.getLogger(CnNotifier.class);
 
-    public WeworkNotifier(NotificatorRegistry notificatorRegistry) {
+    public CnNotifier(NotificatorRegistry notificatorRegistry) {
         log.info("WeworkNotifier init...");
         List<UserPropertyInfo> list = new ArrayList<UserPropertyInfo>();
         notificatorRegistry.register(this, list);
@@ -64,12 +68,12 @@ public class WeworkNotifier extends NotificatorAdapter {
 
     @NotNull
     public String getNotificatorType() {
-        return "wework notifier";
+        return "cn notifier";
     }
 
     @NotNull
     public String getDisplayName() {
-        return "wework notifier";
+        return "cn notifier";
     }
 
     private void doNotifications(Build build, SUser user, String msg) {
@@ -79,7 +83,7 @@ public class WeworkNotifier extends NotificatorAdapter {
         String url = build.getBuildType().getBuildParameter("env.WEBHOOK_URL");
         String atMobileText = build.getBuildType().getBuildParameter("env.AT_MOBILE");
         StringBuilder atMobile = new StringBuilder("[");
-        if (atMobileText != null && !"".equals(atMobileText.trim())) {
+        if (atMobileText != null && atMobileText.trim().length() != 0) {
             String[] split = atMobileText.split(",");
             for (int i = 0; i < split.length; i++) {
                 if (i > 0) {
@@ -90,13 +94,35 @@ public class WeworkNotifier extends NotificatorAdapter {
         }
         atMobile.append("]");
 
-        String body = "{\"text\":{\"content\": \"※TeamCity提醒※\n项目：" + projectName + "，版本号：" + buildNumber + "\n" + msg + "\", \"mentioned_mobile_list\":" + atMobile + "} ,\"msgtype\":\"text\"}";
+        StringBuilder extParam = new StringBuilder();
+        String extParamText = build.getBuildType().getBuildParameter("env.EXT_PARAM");
+        if (extParamText != null && extParamText.trim().length() != 0) {
+            String[] split = extParamText.split(",");
+            for (int i = 0; i < split.length; i++) {
+                if (i > 0) {
+                    extParam.append("\n");
+                }
+                String key = split[i];
+                String value = build.getBuildType().getBuildParameter(key);
+                extParam.append(key).append(":").append(value);
+            }
+        }
+
+        String content = "※TeamCity提醒※\n项目：" + projectName + "，版本号：" + buildNumber + "\n"
+                + "参数：\n" +  extParam + "\n" + msg;
+
+        String body = "{\"text\":{"
+                + "\"content\":"
+                + "\"" + Escape.escapeJson(content) + "\""
+                + ",\"mentioned_mobile_list\":" + atMobile
+                + "}"
+                + ",\"msgtype\":\"text\"}";
 
         sendPost(url, body);
     }
 
     public static String sendPost(String url, String param) {
-        String result = "";
+        StringBuilder result = new StringBuilder();
         try {
             URL realUrl = new URL(url);
             URLConnection conn = realUrl.openConnection();
@@ -114,12 +140,12 @@ public class WeworkNotifier extends NotificatorAdapter {
             BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), "utf-8"));
             String line;
             while ((line = in.readLine()) != null) {
-                result += "\n" + line;
+                result.append("\n").append(line);
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return result;
+        return result.toString();
     }
 
 }

@@ -3,5 +3,5 @@
 <!--
 -->
 <beans default-autowire="constructor">
-    <bean id="weworkNotifier" class="com.github.jsbxyyx.teamcity.notification.cn.WeworkNotifier"/>
+    <bean id="cnNotifier" class="com.github.jsbxyyx.teamcity.notification.cn.CnNotifier"/>
 </beans>
