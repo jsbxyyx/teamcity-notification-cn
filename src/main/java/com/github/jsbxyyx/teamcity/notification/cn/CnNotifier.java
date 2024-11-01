@@ -1,8 +1,8 @@
 package com.github.jsbxyyx.teamcity.notification.cn;
 
-import jetbrains.buildServer.Build;
 import jetbrains.buildServer.notification.NotificatorAdapter;
 import jetbrains.buildServer.notification.NotificatorRegistry;
+import jetbrains.buildServer.parameters.ParametersProvider;
 import jetbrains.buildServer.serverSide.SRunningBuild;
 import jetbrains.buildServer.serverSide.UserPropertyInfo;
 import jetbrains.buildServer.users.SUser;
@@ -23,17 +23,16 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * wework notification
+ * cn notification
  *
  * @author jsbxyyx
- * @since
  */
 public class CnNotifier extends NotificatorAdapter {
 
     private static final Logger log = LoggerFactory.getLogger(CnNotifier.class);
 
     public CnNotifier(NotificatorRegistry notificatorRegistry) {
-        log.info("WeworkNotifier init...");
+        log.info("CnNotifier init...");
         List<UserPropertyInfo> list = new ArrayList<UserPropertyInfo>();
         notificatorRegistry.register(this, list);
     }
@@ -76,7 +75,7 @@ public class CnNotifier extends NotificatorAdapter {
         return "cn notifier";
     }
 
-    private void doNotifications(Build build, SUser user, String msg) {
+    private void doNotifications(SRunningBuild build, SUser user, String msg) {
         String projectName = build.getFullName();
         String buildNumber = build.getBuildNumber();
         // env.WEBHOOK_URL为TeamCity中需要配置的参数
@@ -97,18 +96,19 @@ public class CnNotifier extends NotificatorAdapter {
         StringBuilder extParam = new StringBuilder();
         String extParamText = build.getBuildType().getBuildParameter("env.EXT_PARAM");
         if (extParamText != null && extParamText.trim().length() != 0) {
+            ParametersProvider parametersProvider = build.getParametersProvider();
             String[] split = extParamText.split(",");
             for (int i = 0; i < split.length; i++) {
                 if (i > 0) {
                     extParam.append("\n");
                 }
                 String key = split[i];
-                String value = build.getBuildType().getBuildParameter(key);
-                extParam.append(key).append(":").append(value);
+                String value = parametersProvider.get(key);
+                extParam.append(key).append(": ").append(value == null ? "NULL" : value);
             }
         }
 
-        String content = "※TeamCity提醒※\n项目：" + projectName + "，版本号：" + buildNumber + "\n"
+        String content = "※TeamCity提醒※\n项目：\n" + projectName + "，版本号：" + buildNumber + "\n"
                 + "参数：\n" +  extParam + "\n" + msg;
 
         String body = "{\"text\":{"

@@ -13,4 +13,4 @@ Profile --> Notification Rules -->  cn notifier
             - Environment variable (env.)
             - https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key={key}
             - env.AT_MOBILE 可选
-            - env.EXT_PARAM 可选 需要输出的参数，多个参数用,分隔
+            - env.EXT_PARAM 可选 需要输出的参数，多个参数用,分隔 例如：env.BUILD_URL
